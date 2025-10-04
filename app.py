@@ -34,25 +34,46 @@ cities_kerala = {
 # ------------------------------
 # ML Model download from Google Drive
 # ------------------------------
-MODEL_URL = "https://drive.google.com/uc?export=download&id=1W21f5fyx-5KMoJaDxuZtV0C6Qw_7GcGd"
+import gdown
+import joblib
+import os
+
+# ------------------------------
+# ML Model download from Google Drive
+# ------------------------------
+MODEL_URL = "https://drive.google.com/uc?id=1W21f5fyx-5KMoJaDxuZtV0C6Qw_7GcGd"
 MODEL_FILENAME = "weather_model.pkl"
 
 def download_model(url, filename):
+    """Download model from Google Drive if it doesn't exist"""
     if not os.path.exists(filename):
-        print(f"Downloading {filename}...")
-        r = requests.get(url, stream=True)
-        r.raise_for_status()
-        with open(filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-        print(f"{filename} downloaded successfully!")
+        print(f"Downloading {filename} from Google Drive...")
+        gdown.download(url, filename, quiet=False)
+        if os.path.exists(filename):
+            print(f"{filename} downloaded successfully!")
+        else:
+            raise Exception(f"Failed to download {filename}.")
 
 # Download model if missing
 download_model(MODEL_URL, MODEL_FILENAME)
 
-# Load model and encoder (encoder is already in folder)
-model = joblib.load(MODEL_FILENAME)
-le = joblib.load("label_encoder.pkl")
+# ------------------------------
+# Load model safely
+# ------------------------------
+try:
+    model = joblib.load(MODEL_FILENAME)
+    print("Model loaded successfully!")
+except Exception as e:
+    raise RuntimeError(f"Failed to load model: {e}")
+
+# Load label encoder (assumes it's already in the folder)
+try:
+    le = joblib.load("label_encoder.pkl")
+except Exception as e:
+    raise RuntimeError(f"Failed to load label encoder: {e}")
+
+
+
 
 # ------------------------------
 # Features
